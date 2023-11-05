@@ -247,8 +247,8 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	item[config.Config().WidgetTask.ItemYear] = client.NewEntryValue(data.Year)
 	item[config.Config().WidgetTask.ItemStatus] = client.NewEntryValue(TaskStatusNormal)
 	// 查询【起订量要求、大货周期、打样周期】并设置
-	sp, sc, iu, br, pr, le, gy := queryBase(ctx, data.Type, data.Code)
-	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %s", sp, sc, iu, br, pr, le, gy)
+	sp, sc, iu, br, pr, le, gy, cf, gyswlbm := queryBase(ctx, data.Type, data.Code)
+	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v", sp, sc, iu, br, pr, le, gy)
 	if br != 0 {
 		item[config.Config().WidgetTask.ItemBigRound] = client.NewEntryValue(br)
 	}
@@ -267,8 +267,14 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	if le != "" {
 		item[config.Config().WidgetTask.ItemLeast] = client.NewEntryValue(le)
 	}
-	if gy != "" {
+	if gy != nil {
 		item[config.Config().WidgetTask.ItemGY] = client.NewEntryValue(gy)
+	}
+	if cf != "" {
+		item[config.Config().WidgetTask.ItemCF] = client.NewEntryValue(cf)
+	}
+	if gyswlbm != "" {
+		item[config.Config().WidgetTask.ItemGYSWLBM] = client.NewEntryValue(gyswlbm)
 	}
 
 	ic := queryIfColor(ctx, data.Code)
@@ -317,7 +323,7 @@ const (
 	cateSub    = "辅料"
 )
 
-func queryBase(ctx context.Context, cate string, code string) (string, string, string, int, int, string, string) {
+func queryBase(ctx context.Context, cate string, code string) (string, string, string, int, int, string, any, string, string) {
 	body := &client.QueryParam{
 		BaseEntry: client.BaseEntry{
 			AppID:   config.Config().AppID,
@@ -335,15 +341,15 @@ func queryBase(ctx context.Context, cate string, code string) (string, string, s
 		})
 	resp, err := client.NewIDataClient().Query(ctx, body)
 	if err != nil {
-		return "", "", "", 0, 0, "", ""
+		return "", "", "", 0, 0, "", nil, "", ""
 	}
 	if len(resp.Data) == 0 {
-		return "", "", "", 0, 0, "", ""
+		return "", "", "", 0, 0, "", nil, "", ""
 	}
 	data := resp.Data[0]
 	return data.MGet(widget.ItemSupplier), data.MGet(widget.ItemSupplierCode), data.MGet(widget.ItemIfUse),
 		int(utils.SafeAssert[float64](data.MGetAny(widget.ItemBigRound))), int(utils.SafeAssert[float64](data.MGetAny(widget.ItemProofRound))),
-		data.MGet(widget.ItemLeast), data.MGet(widget.ItemGY)
+		data.MGet(widget.ItemLeast), data.MGetAny(widget.ItemGY), data.MGet(widget.ItemCF), data.MGet(widget.ItemGYSWLBM)
 }
 
 func queryIfColor(ctx context.Context, code string) string {

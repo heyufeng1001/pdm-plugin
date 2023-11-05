@@ -87,5 +87,7 @@ func TestGetItem(t *testing.T) {
 func TestQb(t *testing.T) {
 	config.Init("../../conf/conf.yaml")
 
-	fmt.Println(queryBase(context.Background(), "面料", "M244S022"))
+	_, _, _, _, _, _, gy, _, _ := queryBase(context.Background(), "面料", "M247S945")
+	fmt.Println(gy)
+	fmt.Println(gy == nil)
 }

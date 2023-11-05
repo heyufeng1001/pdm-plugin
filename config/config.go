@@ -66,6 +66,8 @@ type WidgetConfig struct {
 	ItemIfUse        string `yaml:"ItemIfUse"`
 	ItemIfColor      string `yaml:"ItemIfColor"`
 	ItemGY           string `yaml:"ItemGY"`
+	ItemCF           string `yaml:"ItemCF"`
+	ItemGYSWLBM      string `yaml:"ItemGYSWLBM"`
 }
 
 // WidgetDesignCommonConfig

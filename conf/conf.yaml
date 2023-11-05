@@ -33,6 +33,8 @@ WidgetTask:
   ItemIfUse: "_widget_1696666156509"
   ItemIfColor: "_widget_1696666156516"
   ItemGY: "_widget_1697516724301"
+  ItemCF: "_widget_1699184154164"
+  ItemGYSWLBM: "_widget_1696422046839"
 
 WidgetIfColor:
   ItemCode: "_widget_1696665314185"
@@ -262,6 +264,8 @@ WidgetFabric:
   ItemLeast: "_widget_1695706945988"
   ItemIfUse: "_widget_1696665662629"
   ItemGY: "_widget_1693844356184"
+  ItemCF: "_widget_1696304422264"
+  ItemGYSWLBM: "_widget_1698737583717"
 
 WidgetSubsidiary:
   ItemCode: "_widget_1692159568490"
@@ -272,6 +276,8 @@ WidgetSubsidiary:
   ItemLeast: "_widget_1692333142509"
   ItemIfUse: "_widget_1696665695883"
   ItemGY: "_widget_1693844548157"
+  ItemCF: "_widget_1696305650913"
+  ItemGYSWLBM: "_widget_1699015567045"
 
 WidgetDetail:
   SJLSH: "_widget_1695299408499"
