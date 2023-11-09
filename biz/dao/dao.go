@@ -255,9 +255,9 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	if sp != "" {
 		item[config.Config().WidgetTask.ItemSupplier] = client.NewEntryValue(sp)
 	}
-	if sc != "" {
-		item[config.Config().WidgetTask.ItemSupplierCode] = client.NewEntryValue(sc)
-	}
+	//if sc != "" {
+	//	item[config.Config().WidgetTask.ItemSupplierCode] = client.NewEntryValue(sc)
+	//}
 	if iu != "" {
 		item[config.Config().WidgetTask.ItemIfUse] = client.NewEntryValue(iu)
 	}
