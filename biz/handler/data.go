@@ -100,7 +100,7 @@ func handleData(ctx context.Context, data *CallbackData) {
 			if ed.Code == "" && ed.Color == "" && (ed.Type == "" || ed.Type == "面料") {
 				continue
 			}
-			set.Upsert(ed.String(), &ed)
+			set.Upsert(ed.BaseUUID, &ed)
 			boms[ed.BaseUUID] = utils2.MakePair(child, design.ItemChildren)
 		}
 	}
@@ -292,8 +292,8 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 	txID := fmt.Sprintf("%s-%d", ctx.Value(logs.CtxKeyLogID), time.Now().Unix())
 	entries := []client.EntryItem{}
 	buIDs := []string{}
-	for _, record := range drs {
-		uuid := record.BaseUUID
+	for uuid, bom := range h.BOMs {
+		//uuid := record.BaseUUID
 		logs.CtxInfo(ctx, "[handleBase]ready to handle: %s", uuid)
 		detail, err := dao.GetDetailByUUID(ctx, uuid)
 		if err != nil {
@@ -303,12 +303,12 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 		if detail == nil {
 			// 新增detail
 			logs.CtxInfo(ctx, "[handleBase]detail is nil, will create: %s", uuid)
-			p, ok := h.BOMs[uuid]
-			if !ok {
-				logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
-				continue
-			}
-			entry := dao.MakeDetailEntry(ctx, h.Data, p.First, p.Second, txID)
+			//p, ok := h.BOMs[uuid]
+			//if !ok {
+			//	logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
+			//	continue
+			//}
+			entry := dao.MakeDetailEntry(ctx, h.Data, bom.First, bom.Second, txID)
 			if entry == nil {
 				logs.CtxInfo(ctx, "[handleBase]make entry return nil")
 				continue
@@ -362,6 +362,12 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 			}
 		} else {
 			logs.CtxInfo(ctx, "[handleBase]task exist")
+			// 判断是否是「已取消状态」
+			status, ok := task.Get(config.Config().WidgetTask.ItemStatus)
+			if !ok || status != string(dao.TaskStatusCanceled) {
+				logs.CtxInfo(ctx, "[handleBase]get task status failed or not canceled: %t, %s", ok, status)
+				continue
+			}
 			id, ok := task.Get("_id")
 			if !ok {
 				logs.CtxError(ctx, "[handleBase]get task item id failed")
@@ -434,7 +440,7 @@ func (h *handler) handleDec(ctx context.Context) error {
 			}
 			logs.CtxInfo(ctx, "[handleDec]ready to update task item: %s", id)
 			//当前进度不为空时,如果版单BOM表的[企划季度-编码-名称-颜色]全删掉了,开发状态变更为【已取消】
-			//当前进度为空时,如果版单BOM表单[企划季度-编码-名名称-颜色]全删掉了,则删除打色任务的该条数据
+			//当前进度为空时,如果版单BOM表单[企划季度-编码-名称-颜色]全删掉了,则删除打色任务的该条数据
 			pace, ok := task.GetAny("_widget_1696865063325")
 			if !ok {
 				logs.CtxError(ctx, "[handleDec]get task item pace failed")
@@ -505,7 +511,7 @@ func test(ctx context.Context, data *CallbackData) {
 			if ed.Code == "" && ed.Color == "" && (ed.Type == "" || ed.Type == "面料") {
 				continue
 			}
-			set.Upsert(ed.String(), &ed)
+			set.Upsert(ed.BaseUUID, &ed)
 			//boms[ed.BaseUUID] = utils2.MakePair(child, design.ItemChildren)
 		}
 	}

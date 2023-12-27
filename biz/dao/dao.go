@@ -248,7 +248,7 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	item[config.Config().WidgetTask.ItemStatus] = client.NewEntryValue(TaskStatusNormal)
 	// 查询【起订量要求、大货周期、打样周期】并设置
 	sp, sc, iu, br, pr, le, gy, cf, gyswlbm := queryBase(ctx, data.Type, data.Code)
-	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v", sp, sc, iu, br, pr, le, gy)
+	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v, cf: %s, gyswlbm", sp, sc, iu, br, pr, le, gy, cf, gyswlbm)
 	if br != 0 {
 		item[config.Config().WidgetTask.ItemBigRound] = client.NewEntryValue(br)
 	}
@@ -273,9 +273,9 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	if cf != "" {
 		item[config.Config().WidgetTask.ItemCF] = client.NewEntryValue(cf)
 	}
-	if gyswlbm != "" {
-		item[config.Config().WidgetTask.ItemGYSWLBM] = client.NewEntryValue(gyswlbm)
-	}
+	//if gyswlbm != "" {
+	//	item[config.Config().WidgetTask.ItemGYSWLBM] = client.NewEntryValue(gyswlbm)
+	//}
 
 	ic := queryIfColor(ctx, data.Code)
 	logs.CtxInfo(ctx, "[CreateTaskItem]query if color return:ic: %s", ic)
@@ -301,6 +301,8 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 
 	//SafeSet(ctx, common.GY, base, item, other.GY)
 	SafeSet(ctx, common.BD, base, item, other.BD)
+	SafeSet(ctx, common.KH, base, item, other.KH)
+	SafeSet(ctx, common.SJS, base, item, other.SJS)
 
 	//SafeSet(ctx, conf.TP, bom, item, other.TP)
 	SafeSetFile(ctx, conf.TP, bom, item, other.TP, txID, config.Config().EntryTaskID)
@@ -311,6 +313,17 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	SafeSet(ctx, conf.KZ, bom, item, other.KZ)
 	SafeSet(ctx, conf.DW, bom, item, other.DW)
 	SafeSet(ctx, conf.ZRR, bom, item, other.FZR)
+	SafeSet(ctx, conf.YWLBM, bom, item, other.YWLBM)
+	SafeSet(ctx, conf.SFCYWL, bom, item, other.SFCYWL)
+	SafeSet(ctx, conf.MLGY, bom, item, other.MLGY)
+	SafeSet(ctx, conf.WLJD, bom, item, other.WLJD)
+	SafeSet(ctx, conf.TSYQ, bom, item, other.TSYQ)
+	SafeSet(ctx, conf.BZ, bom, item, other.BZ)
+	SafeSet(ctx, conf.HSDJ, bom, item, other.HSDJ)
+	SafeSet(ctx, conf.GYSZH, bom, item, other.GYSZH)
+	SafeSet(ctx, conf.SFYYS, bom, item, other.SFYYS)
+	SafeSet(ctx, conf.FZZDBDSJ, bom, item, other.FZZDBDSJ)
+	SafeSet(ctx, conf.GYSWLBM, bom, item, other.GYSWLBM)
 
 	body.Data = item
 	err := client.NewIDataClient().Create(ctx, body)

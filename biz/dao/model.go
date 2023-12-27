@@ -88,6 +88,20 @@ func MakeDetailEntry(ctx context.Context, base, bom client.EntryItem, entryID, t
 	SafeSet(ctx, conf.YSYWMC, bom, ret, detail.YSYWMC)
 	SafeSet(ctx, conf.YSZWMC, bom, ret, detail.YSZWMC)
 	SafeSet(ctx, conf.MLBL, bom, ret, detail.YLZB)
+	SafeSet(ctx, conf.YWLBM, bom, ret, detail.YWLBM)
+	SafeSet(ctx, conf.SFCYWL, bom, ret, detail.SFCYWL)
+	SafeSet(ctx, conf.MLGY, bom, ret, detail.MLGY)
+	SafeSet(ctx, conf.WLJD, bom, ret, detail.WLJD)
+	SafeSet(ctx, conf.TSYQ, bom, ret, detail.TSYQ)
+	SafeSet(ctx, conf.BZ, bom, ret, detail.BZ)
+	SafeSet(ctx, conf.SH, bom, ret, detail.SH)
+	SafeSet(ctx, conf.HSDJ, bom, ret, detail.HSDJ)
+	SafeSet(ctx, conf.GYSJC, bom, ret, detail.GYSJC)
+	SafeSet(ctx, conf.GYSZH, bom, ret, detail.GYSZH)
+	SafeSet(ctx, conf.SFYYS, bom, ret, detail.SFYYS)
+	SafeSet(ctx, conf.FZZDBDSJ, bom, ret, detail.FZZDBDSJ)
+	SafeSet(ctx, conf.GYSWLBM, bom, ret, detail.GYSWLBM)
+	SafeSet(ctx, conf.SZ, bom, ret, detail.SZ)
 	SafeSetFile(ctx, conf.TP, bom, ret, detail.TP, txID, config.Config().EntryDetailID)
 
 	SafeSet(ctx, common.BD, base, ret, detail.BD)
@@ -129,7 +143,8 @@ func SafeSet(ctx context.Context, key string, from, to client.EntryItem, keyTo s
 		logs.CtxInfo(ctx, "[SafeSet]get any return false")
 		return
 	}
-	if keyTo == config.Config().WidgetTaskOther.FZR || keyTo == config.Config().WidgetDetail.SJS {
+	if keyTo == config.Config().WidgetTaskOther.FZR || keyTo == config.Config().WidgetDetail.SJS || keyTo == config.Config().WidgetTaskOther.SJS ||
+		keyTo == config.Config().WidgetTaskOther.GYSZH || keyTo == config.Config().WidgetDetail.GYSZH {
 		logs.CtxInfo(ctx, "[SafeSet]into key fzr, kk is: %s", utils.MustMarshal(kk))
 		people, ok := kk.(map[string]any)
 		if !ok {

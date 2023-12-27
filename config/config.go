@@ -103,24 +103,37 @@ type WidgetDesignCommonConfig struct {
 }
 
 type WidgetDesignBOMConfig struct {
-	BW     string `yaml:"BW"`
-	GG     string `yaml:"GG"`
-	YL     string `yaml:"YL"`
-	BOMID  string `yaml:"BOMID"`
-	WLBM   string `yaml:"WLBM"`
-	BDBFK  string `yaml:"BDBFK"`
-	UUID   string `yaml:"UUID"`
-	WLMC   string `yaml:"WLMC"`
-	YSYWMC string `yaml:"YSYWMC"`
-	SH     string `yaml:"SH"`
-	TP     string `yaml:"TP"`
-	KZ     string `yaml:"KZ"`
-	WLDL   string `yaml:"WLDL"`
-	YSZWMC string `yaml:"YSZWMC"`
-	SYFK   string `yaml:"SYFK"`
-	DW     string `yaml:"DW"`
-	ZRR    string `yaml:"ZRR"`
-	MLBL   string `yaml:"MLBL"`
+	BW       string `yaml:"BW"`
+	GG       string `yaml:"GG"`
+	YL       string `yaml:"YL"`
+	BOMID    string `yaml:"BOMID"`
+	WLBM     string `yaml:"WLBM"`
+	BDBFK    string `yaml:"BDBFK"`
+	UUID     string `yaml:"UUID"`
+	WLMC     string `yaml:"WLMC"`
+	YSYWMC   string `yaml:"YSYWMC"`
+	SH       string `yaml:"SH"`
+	TP       string `yaml:"TP"`
+	KZ       string `yaml:"KZ"`
+	WLDL     string `yaml:"WLDL"`
+	YSZWMC   string `yaml:"YSZWMC"`
+	SYFK     string `yaml:"SYFK"`
+	DW       string `yaml:"DW"`
+	ZRR      string `yaml:"ZRR"`
+	MLBL     string `yaml:"MLBL"`
+	YWLBM    string `yaml:"YWLBM"`
+	SFCYWL   string `yaml:"SFCYWL"`
+	FZZDBDSJ string `yaml:"FZZDBDSJ"`
+	MLGY     string `yaml:"MLGY"`
+	SZ       string `yaml:"SZ"`
+	GYSZH    string `yaml:"GYSZH"`
+	GYSWLBM  string `yaml:"GYSWLBM"`
+	WLJD     string `yaml:"WLJD"`
+	HSDJ     string `yaml:"HSDJ"`
+	BZ       string `yaml:"BZ"`
+	GYSJC    string `yaml:"GYSJC"`
+	TSYQ     string `yaml:"TSYQ"`
+	SFYYS    string `yaml:"SFYYS"`
 
 	RWZT string `yaml:"RWZT"`
 }
@@ -171,19 +184,45 @@ type WidgetDetailConfig struct {
 	WLMC     string `yaml:"WLMC"`
 	BDBFK    string `yaml:"BDBFK"`
 	WLXUJXFZ string `yaml:"WLXUJXFZ"`
+	FZZDBDSJ string `yaml:"FZZDBDSJ"`
+	MLGY     string `yaml:"MLGY"`
+	SZ       string `yaml:"SZ"`
+	GYSZH    string `yaml:"GYSZH"`
+	GYSWLBM  string `yaml:"GYSWLBM"`
+	YWLBM    string `yaml:"YWLBM"`
+	WLJD     string `yaml:"WLJD"`
+	HSDJ     string `yaml:"HSDJ"`
+	BZ       string `yaml:"BZ"`
+	GYSJC    string `yaml:"GYSJC"`
+	SFCYWL   string `yaml:"SFCYWL"`
+	TSYQ     string `yaml:"TSYQ"`
+	SFYYS    string `yaml:"SFYYS"`
 }
 
 type WidgetTaskOtherConfig struct {
-	DW    string `yaml:"DW"`
-	WLMC  string `yaml:"WLMC"`
-	BD    string `yaml:"BD"`
-	SH    string `yaml:"SH"`
-	TP    string `yaml:"TP"`
-	SYFK  string `yaml:"SYFK"`
-	GY    string `yaml:"GY"`
-	BDBFK string `yaml:"BDBFK"`
-	KZ    string `yaml:"KZ"`
-	FZR   string `yaml:"FZR"`
+	DW       string `yaml:"DW"`
+	WLMC     string `yaml:"WLMC"`
+	BD       string `yaml:"BD"`
+	SH       string `yaml:"SH"`
+	TP       string `yaml:"TP"`
+	SYFK     string `yaml:"SYFK"`
+	GY       string `yaml:"GY"`
+	BDBFK    string `yaml:"BDBFK"`
+	KZ       string `yaml:"KZ"`
+	FZR      string `yaml:"FZR"`
+	KH       string `yaml:"KH"`
+	YWLBM    string `yaml:"YWLBM"`
+	FZZDBDSJ string `yaml:"FZZDBDSJ"`
+	MLGY     string `yaml:"MLGY"`
+	GYSZH    string `yaml:"GYSZH"`
+	GYSWLBM  string `yaml:"GYSWLBM"`
+	WLJD     string `yaml:"WLJD"`
+	HSDJ     string `yaml:"HSDJ"`
+	BZ       string `yaml:"BZ"`
+	SFCYWL   string `yaml:"SFCYWL"`
+	TSYQ     string `yaml:"TSYQ"`
+	SFYYS    string `yaml:"SFYYS"`
+	SJS      string `yaml:"SJS"`
 }
 
 var conf *AppConfig
