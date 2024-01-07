@@ -248,7 +248,7 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	item[config.Config().WidgetTask.ItemStatus] = client.NewEntryValue(TaskStatusNormal)
 	// 查询【起订量要求、大货周期、打样周期】并设置
 	sp, sc, iu, br, pr, le, gy, cf, gyswlbm := queryBase(ctx, data.Type, data.Code)
-	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v, cf: %s, gyswlbm", sp, sc, iu, br, pr, le, gy, cf, gyswlbm)
+	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v, cf: %s, gyswlbm: %s", sp, sc, iu, br, pr, le, gy, cf, gyswlbm)
 	if br != 0 {
 		item[config.Config().WidgetTask.ItemBigRound] = client.NewEntryValue(br)
 	}
@@ -331,6 +331,101 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	return err
 }
 
+func MakeTaskItem(ctx context.Context, data *EntryData, base, bom client.EntryItem,
+	entryID string, isSync bool) client.EntryItem {
+	txID := fmt.Sprintf("%s-%d", ctx.Value(logs.CtxKeyLogID), time.Now().Unix())
+	item := client.EntryItem(make(map[string]any))
+	item[config.Config().WidgetTask.ItemType] = client.NewEntryValue(data.Type)
+	item[config.Config().WidgetTask.ItemColor] = client.NewEntryValue(data.Color)
+	item[config.Config().WidgetTask.ItemCode] = client.NewEntryValue(data.Code)
+	item[config.Config().WidgetTask.ItemYear] = client.NewEntryValue(data.Year)
+	if !isSync {
+		item[config.Config().WidgetTask.ItemStatus] = client.NewEntryValue(TaskStatusNormal)
+	}
+	// 查询【起订量要求、大货周期、打样周期】并设置
+	sp, sc, iu, br, pr, le, gy, cf, gyswlbm := queryBase(ctx, data.Type, data.Code)
+	logs.CtxInfo(ctx, "[CreateTaskItem]query base return:sp: %s, sc: %s, iu: %s, br: %d, pr: %d, le: %s, gy: %v, cf: %s, gyswlbm: %s", sp, sc, iu, br, pr, le, gy, cf, gyswlbm)
+	if br != 0 {
+		item[config.Config().WidgetTask.ItemBigRound] = client.NewEntryValue(br)
+	}
+	if sp != "" {
+		item[config.Config().WidgetTask.ItemSupplier] = client.NewEntryValue(sp)
+	}
+	//if sc != "" {
+	//	item[config.Config().WidgetTask.ItemSupplierCode] = client.NewEntryValue(sc)
+	//}
+	if iu != "" {
+		item[config.Config().WidgetTask.ItemIfUse] = client.NewEntryValue(iu)
+	}
+	if pr != 0 {
+		item[config.Config().WidgetTask.ItemProofRound] = client.NewEntryValue(pr)
+	}
+	if le != "" {
+		item[config.Config().WidgetTask.ItemLeast] = client.NewEntryValue(le)
+	}
+	if gy != nil {
+		item[config.Config().WidgetTask.ItemGY] = client.NewEntryValue(gy)
+	}
+	if cf != "" {
+		item[config.Config().WidgetTask.ItemCF] = client.NewEntryValue(cf)
+	}
+	//if gyswlbm != "" {
+	//	item[config.Config().WidgetTask.ItemGYSWLBM] = client.NewEntryValue(gyswlbm)
+	//}
+
+	ic := queryIfColor(ctx, data.Code)
+	logs.CtxInfo(ctx, "[CreateTaskItem]query if color return:ic: %s", ic)
+	if ic != "" {
+		item[config.Config().WidgetTask.ItemIfColor] = client.NewEntryValue(ic)
+	}
+
+	var conf *config.WidgetDesignBOMConfig
+	for _, bc := range config.Config().WidgetDesignBOMs {
+		if bc.BOMID == entryID {
+			logs.CtxInfo(ctx, "[MakeDetailEntry]find entry: %s", utils.MustMarshal(bc))
+			conf = &bc
+			break
+		}
+	}
+	if conf == nil {
+		logs.CtxInfo(ctx, "[MakeDetailEntry]no conf find: %s", entryID)
+		return nil
+	}
+	// 处理other字段
+	common := config.Config().WidgetDesignCommon
+	other := config.Config().WidgetTaskOther
+
+	//SafeSet(ctx, common.GY, base, item, other.GY)
+	SafeSet(ctx, common.BD, base, item, other.BD)
+	SafeSet(ctx, common.KH, base, item, other.KH)
+	SafeSet(ctx, common.SJS, base, item, other.SJS)
+
+	//SafeSet(ctx, conf.TP, bom, item, other.TP)
+	SafeSetFile(ctx, conf.TP, bom, item, other.TP, txID, config.Config().EntryTaskID)
+	SafeSet(ctx, conf.WLMC, bom, item, other.WLMC)
+	SafeSet(ctx, conf.SH, bom, item, other.SH)
+	SafeSet(ctx, conf.SYFK, bom, item, other.SYFK)
+	SafeSet(ctx, conf.BDBFK, bom, item, other.BDBFK)
+	SafeSet(ctx, conf.KZ, bom, item, other.KZ)
+	SafeSet(ctx, conf.DW, bom, item, other.DW)
+	SafeSet(ctx, conf.ZRR, bom, item, other.FZR)
+	SafeSet(ctx, conf.YWLBM, bom, item, other.YWLBM)
+	SafeSet(ctx, conf.SFCYWL, bom, item, other.SFCYWL)
+	SafeSet(ctx, conf.MLGY, bom, item, other.MLGY)
+	SafeSet(ctx, conf.WLJD, bom, item, other.WLJD)
+	SafeSet(ctx, conf.TSYQ, bom, item, other.TSYQ)
+	SafeSet(ctx, conf.BZ, bom, item, other.BZ)
+	SafeSet(ctx, conf.HSDJ, bom, item, other.HSDJ)
+	SafeSet(ctx, conf.GYSZH, bom, item, other.GYSZH)
+	SafeSet(ctx, conf.SFYYS, bom, item, other.SFYYS)
+	if !isSync {
+		SafeSet(ctx, conf.FZZDBDSJ, bom, item, other.FZZDBDSJ)
+	}
+	SafeSet(ctx, conf.GYSWLBM, bom, item, other.GYSWLBM)
+
+	return item
+}
+
 const (
 	cateFabric = "面料"
 	cateSub    = "辅料"
@@ -392,8 +487,8 @@ func queryIfColor(ctx context.Context, code string) string {
 	return data.MGet(widget.ItemIfColor)
 }
 
-func UpdateTaskItem(ctx context.Context, id string, status TaskStatus) error {
-	logs.CtxInfo(ctx, "[UpdateTaskItem]ready to update task: %s, %s", id, status)
+func UpdateTaskStatus(ctx context.Context, id string, status TaskStatus) error {
+	logs.CtxInfo(ctx, "[UpdateTaskStatus]ready to update task: %s, %s", id, status)
 	body := &client.UpdateParam{
 		BaseEntry: client.BaseEntry{
 			AppID:   config.Config().AppID,
@@ -405,7 +500,22 @@ func UpdateTaskItem(ctx context.Context, id string, status TaskStatus) error {
 	item[config.Config().WidgetTask.ItemStatus] = client.NewEntryValue(status)
 	body.Data = item
 	err := client.NewIDataClient().Update(ctx, body)
-	logs.CtxInfo(ctx, "[UpdateTaskItem]return is: %s", err)
+	logs.CtxInfo(ctx, "[UpdateTaskStatus]return is: %s", err)
+	return err
+}
+
+func UpdateTask(ctx context.Context, id string, item client.EntryItem) error {
+	logs.CtxInfo(ctx, "[UpdateTaskStatus]ready to update task: %s, %s", id, utils.MustMarshal(item))
+	body := &client.UpdateParam{
+		BaseEntry: client.BaseEntry{
+			AppID:   config.Config().AppID,
+			EntryID: config.Config().EntryTaskID,
+		},
+		DataID: id,
+		Data:   item,
+	}
+	err := client.NewIDataClient().Update(ctx, body)
+	logs.CtxInfo(ctx, "[UpdateTaskStatus]return is: %s", err)
 	return err
 }
 
@@ -456,6 +566,52 @@ func GetDetailByUUID(ctx context.Context, uuid string) (client.EntryItem, error)
 	return item.Data[0], nil
 }
 
+func QueryDetail(ctx context.Context, data *EntryData) (bool, error) {
+	logs.CtxInfo(ctx, "[QueryDetail]start, uuid: %s", utils.MustMarshal(data))
+	gdLimiter.Wait(ctx)
+	body := &client.QueryParam{
+		BaseEntry: client.BaseEntry{
+			AppID:   config.Config().AppID,
+			EntryID: config.Config().EntryDetailID,
+		},
+		Filter: filter.NewFilter().WithRel(filter.RelationAnd).
+			WithCond(&filter.Cond{
+				Field:  config.Config().WidgetDetail.WLBM,
+				Type:   "string",
+				Method: filter.CondMethodEq,
+				Value:  []any{data.Code},
+			}).WithCond(&filter.Cond{
+			Field:  config.Config().WidgetDetail.QHJD,
+			Type:   "string",
+			Method: filter.CondMethodEq,
+			Value:  []any{data.Year},
+		}).WithCond(&filter.Cond{
+			Field:  config.Config().WidgetDetail.YSZWMC,
+			Type:   "string",
+			Method: filter.CondMethodEq,
+			Value:  []any{data.Color},
+		}).WithCond(&filter.Cond{
+			Field:  config.Config().WidgetDetail.WLMC,
+			Type:   "string",
+			Method: filter.CondMethodEq,
+			Value:  []any{data.WLMC},
+		}),
+		Limit: 10,
+	}
+	item, err := client.NewIDataClient().Query(ctx, body)
+	if err != nil {
+		logs.CtxError(ctx, "[GetDetailByUUID]query remote failed: %s", err)
+		return false, err
+	}
+	logs.CtxInfo(ctx, "[GetDetailByUUID]data len: %d", len(item.Data))
+	if len(item.Data) == 0 {
+		logs.CtxInfo(ctx, "[GetDetailByUUID]return both nil")
+		return false, nil
+	}
+	logs.CtxInfo(ctx, "[GetDetailByUUID]finish: %s", utils.MustMarshal(item.Data[0]))
+	return true, nil
+}
+
 func CreateDetailDatas(ctx context.Context, datas []client.EntryItem, txID string) error {
 	logs.CtxInfo(ctx, "[CreateDetailDatas]start: %s", utils.MustMarshal(datas))
 	body := &client.BatchCreateParam{
@@ -488,6 +644,21 @@ func UpdateDetailStatus(ctx context.Context, id string, status string) error {
 	return err
 }
 
+func UpdateDetail(ctx context.Context, id string, item client.EntryItem) error {
+	logs.CtxInfo(ctx, "[UpdateDetailStatus]start, id: %s, status: %s", id, utils.MustMarshal(item))
+	body := &client.UpdateParam{
+		BaseEntry: client.BaseEntry{
+			AppID:   config.Config().AppID,
+			EntryID: config.Config().EntryDetailID,
+		},
+		DataID: id,
+	}
+	body.Data = item
+	err := client.NewIDataClient().Update(ctx, body)
+	logs.CtxInfo(ctx, "[UpdateDetailStatus]return is: %s", err)
+	return err
+}
+
 func BatchUpdateDetailStatus(ctx context.Context, ids []string, status string) error {
 	logs.CtxInfo(ctx, "[BatchUpdateDetailStatus]start, ids: %s, status: %s", ids, status)
 	if len(ids) == 0 {
@@ -503,6 +674,7 @@ func BatchUpdateDetailStatus(ctx context.Context, ids []string, status string) e
 	}
 	item := client.EntryItem(make(map[string]any))
 	item[config.Config().WidgetDetail.RWZT] = client.NewEntryValue(status)
+	// 这里对其他字段也做增量修改
 	body.Data = item
 	err := client.NewIDataClient().BatchUpdate(ctx, body)
 	logs.CtxInfo(ctx, "[BatchUpdateDetailStatus]return is: %s", err)

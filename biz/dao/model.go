@@ -19,6 +19,7 @@ type EntryData struct {
 	Color  string
 	Year   string
 	Status string
+	WLMC   string
 }
 
 func (e *EntryData) String() string {
@@ -206,6 +207,11 @@ func SafeSetFile(ctx context.Context, key string, from, to client.EntryItem, key
 			return
 		}
 		fs = append(fs, utils.MakePair(url, name))
+	}
+
+	if len(fs) == 0 {
+		logs.CtxInfo(ctx, "[SafeSetFile]fs is nil")
+		return
 	}
 
 	keys, err := UploadImage(ctx, fs, txID, entryID)

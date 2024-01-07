@@ -5,6 +5,8 @@
 package utils
 
 import (
+	"sync"
+
 	"github.com/bytedance/sonic"
 )
 
@@ -12,3 +14,5 @@ func MustMarshal(v any) string {
 	s, _ := sonic.MarshalString(v)
 	return s
 }
+
+var GlobalLock sync.Mutex

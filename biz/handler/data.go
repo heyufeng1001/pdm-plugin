@@ -57,6 +57,12 @@ func handleData(ctx context.Context, data *CallbackData) {
 		//})
 		return
 	}
+
+	logs.CtxInfo(ctx, "[HandleData]inject ctx success, try to get lock")
+	utils2.GlobalLock.Lock()
+	defer utils2.GlobalLock.Unlock()
+	logs.CtxInfo(ctx, "[HandleData]get lock success")
+
 	// 签名验证 TODO
 
 	set := utils2.NewSetSlice[string, *dao.DesignRecord]()
@@ -190,43 +196,7 @@ func handleData(ctx context.Context, data *CallbackData) {
 	}
 
 	hdl.diff(ctx)
-
-	if len(hdl.Dec) != 0 {
-		err = hdl.handleDec(ctx)
-		if err != nil {
-			logs.CtxError(ctx, "[HandleData]handle dec failed: %s", err)
-			//c.JSON(http.StatusBadRequest, utils.H{
-			//	"message": err.Error(),
-			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
-			//})
-			return
-		}
-	}
-
-	if len(hdl.Inc) != 0 {
-		err = hdl.handleInc(ctx)
-		if err != nil {
-			logs.CtxError(ctx, "[HandleData]handle inc failed: %s", err)
-			//c.JSON(http.StatusBadRequest, utils.H{
-			//	"message": err.Error(),
-			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
-			//})
-			return
-		}
-	}
-
-	if len(hdl.Both) != 0 {
-		err = hdl.handleBoth(ctx)
-		if err != nil {
-			logs.CtxError(ctx, "[HandleData]handle both failed: %s", err)
-			//c.JSON(http.StatusBadRequest, utils.H{
-			//	"message": err.Error(),
-			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
-			//})
-			return
-		}
-	}
-
+	hdl.handle(ctx)
 	//
 	logs.CtxInfo(ctx, "[HandleData]Handle Success")
 	//c.JSON(200, utils.H{"message": "success"})
@@ -270,6 +240,44 @@ func (h *handler) diff(ctx context.Context) {
 	return
 }
 
+func (h *handler) handle(ctx context.Context) {
+	if len(h.Dec) != 0 {
+		err := h.handleDec(ctx)
+		if err != nil {
+			logs.CtxError(ctx, "[HandleData]handle dec failed: %s", err)
+			//c.JSON(http.StatusBadRequest, utils.H{
+			//	"message": err.Error(),
+			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
+			//})
+			return
+		}
+	}
+
+	if len(h.Inc) != 0 {
+		err := h.handleInc(ctx)
+		if err != nil {
+			logs.CtxError(ctx, "[HandleData]handle inc failed: %s", err)
+			//c.JSON(http.StatusBadRequest, utils.H{
+			//	"message": err.Error(),
+			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
+			//})
+			return
+		}
+	}
+
+	if len(h.Both) != 0 {
+		err := h.handleBoth(ctx)
+		if err != nil {
+			logs.CtxError(ctx, "[HandleData]handle both failed: %s", err)
+			//c.JSON(http.StatusBadRequest, utils.H{
+			//	"message": err.Error(),
+			//	"log_id":  ctx.Value(logs.CtxKeyLogID),
+			//})
+			return
+		}
+	}
+}
+
 // record表不动，task表: 存在：更新状态为正常，不存在：新增
 // detail表：数据全量覆盖
 func (h *handler) handleBoth(ctx context.Context) error {
@@ -289,58 +297,11 @@ func (h *handler) handleInc(ctx context.Context) error {
 }
 
 func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error {
-	txID := fmt.Sprintf("%s-%d", ctx.Value(logs.CtxKeyLogID), time.Now().Unix())
-	entries := []client.EntryItem{}
-	buIDs := []string{}
-	for uuid, bom := range h.BOMs {
-		//uuid := record.BaseUUID
-		logs.CtxInfo(ctx, "[handleBase]ready to handle: %s", uuid)
-		detail, err := dao.GetDetailByUUID(ctx, uuid)
-		if err != nil {
-			logs.CtxError(ctx, "[handleBase]get detail failed: %s", err)
-			return err
-		}
-		if detail == nil {
-			// 新增detail
-			logs.CtxInfo(ctx, "[handleBase]detail is nil, will create: %s", uuid)
-			//p, ok := h.BOMs[uuid]
-			//if !ok {
-			//	logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
-			//	continue
-			//}
-			entry := dao.MakeDetailEntry(ctx, h.Data, bom.First, bom.Second, txID)
-			if entry == nil {
-				logs.CtxInfo(ctx, "[handleBase]make entry return nil")
-				continue
-			}
-			entry[config.Config().WidgetDetail.RWZT] = client.NewEntryValue("正常")
-			logs.CtxInfo(ctx, "[handleBase]add entry: %s", utils2.MustMarshal(entry))
-			entries = append(entries, entry)
-			continue
-		}
-		id, ok := detail.Get("_id")
-		if !ok {
-			logs.CtxInfo(ctx, "[handleBase]get id failed: %s", utils2.MustMarshal(detail))
-			continue
-		}
-		logs.CtxInfo(ctx, "[handleBase]ready to append id: %s", id)
-		buIDs = append(buIDs, id)
-	}
-	logs.CtxInfo(ctx, "[handleBase]ready to batch update status")
-	err := dao.BatchUpdateDetailStatus(ctx, buIDs, "正常")
+	err := h.handleDetails(ctx)
 	if err != nil {
-		logs.CtxError(ctx, "[handleBase]batch update status failed: %s", err)
+		logs.CtxError(ctx, "[handleBase]handle details failed: %s", err)
 		return err
 	}
-	logs.CtxInfo(ctx, "[handleBase]entries len: %d", len(entries))
-	if len(entries) != 0 {
-		err := dao.CreateDetailDatas(ctx, entries, txID)
-		if err != nil {
-			logs.CtxError(ctx, "[handleBase]create detail failed: %s", err)
-			return err
-		}
-	}
-
 	for _, dr := range drs {
 		// 查询task表中是否存在
 		task, err := dao.QueryTask(ctx, dr.ToEntryData())
@@ -348,13 +309,13 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 			logs.CtxError(ctx, "[handleBase]query task failed: %s", err)
 			return err
 		}
+		p, ok := h.BOMs[dr.BaseUUID]
+		if !ok {
+			logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
+			continue
+		}
 		if task == nil {
 			logs.CtxInfo(ctx, "[handleBase]task not exist")
-			p, ok := h.BOMs[dr.BaseUUID]
-			if !ok {
-				logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
-				continue
-			}
 			err = dao.CreateTaskItem(ctx, dr.ToEntryData(), h.Data, p.First, p.Second)
 			if err != nil {
 				logs.CtxError(ctx, "[handleBase]create task failed: %s", err)
@@ -363,6 +324,7 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 		} else {
 			logs.CtxInfo(ctx, "[handleBase]task exist")
 			// 判断是否是「已取消状态」
+			// TODO 对齐这里的逻辑，是否还需要处理「取消态」
 			status, ok := task.Get(config.Config().WidgetTask.ItemStatus)
 			if !ok || status != string(dao.TaskStatusCanceled) {
 				logs.CtxInfo(ctx, "[handleBase]get task status failed or not canceled: %t, %s", ok, status)
@@ -374,13 +336,77 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 				return errors.New("get task item id failed")
 			}
 			logs.CtxInfo(ctx, "[handleBase]ready to update task item: %s", id)
-			err = dao.UpdateTaskItem(ctx, id, dao.TaskStatusNormal)
+			nt := dao.MakeTaskItem(ctx, dr.ToEntryData(), h.Data, p.First, p.Second, false)
+			err = dao.UpdateTask(ctx, id, nt)
 			if err != nil {
 				logs.CtxError(ctx, "[handleBase]failed to update task item: %s", err)
 				return err
 			}
 		}
 	}
+	return nil
+}
+
+func (h *handler) handleDetails(ctx context.Context) error {
+	txID := fmt.Sprintf("%s-%d", ctx.Value(logs.CtxKeyLogID), time.Now().Unix())
+	cEntries, uEntires := []client.EntryItem{}, []*utils2.Pair[string, client.EntryItem]{}
+	//buIDs := []string{}
+	for uuid, bom := range h.BOMs {
+		//uuid := record.BaseUUID
+		logs.CtxInfo(ctx, "[handleDetails]ready to handle: %s", uuid)
+		entry := dao.MakeDetailEntry(ctx, h.Data, bom.First, bom.Second, txID)
+		if entry == nil {
+			logs.CtxInfo(ctx, "[handleDetails]make entry return nil")
+			continue
+		}
+		detail, err := dao.GetDetailByUUID(ctx, uuid)
+		if err != nil {
+			logs.CtxError(ctx, "[handleDetails]get detail failed: %s", err)
+			return err
+		}
+		if detail == nil {
+			// 新增detail
+			entry[config.Config().WidgetDetail.RWZT] = client.NewEntryValue("正常")
+			logs.CtxInfo(ctx, "[handleDetails]detail is nil, will create: %s", uuid)
+			//p, ok := h.BOMs[uuid]
+			//if !ok {
+			//	logs.CtxInfo(ctx, "[handleBase]not in BOMs, jump")
+			//	continue
+			//}
+			logs.CtxInfo(ctx, "[handleDetails]add entry: %s", utils2.MustMarshal(entry))
+			cEntries = append(cEntries, entry)
+			continue
+		} else {
+			logs.CtxInfo(ctx, "[handleDetails]detail is nil, will create: %s", uuid)
+			id, ok := detail.Get("_id")
+			if !ok {
+				logs.CtxInfo(ctx, "[handleDetails]get id failed: %s", utils2.MustMarshal(detail))
+				continue
+			}
+			logs.CtxInfo(ctx, "[handleDetails]ready to append id: %s", id)
+			uEntires = append(uEntires, utils2.MakePair(id, entry))
+		}
+
+	}
+	logs.CtxInfo(ctx, "[handleDetails]ready to batch update status, len: %d", len(uEntires))
+	if len(uEntires) != 0 {
+		for _, entire := range uEntires {
+			err := dao.UpdateDetail(ctx, entire.First, entire.Second)
+			if err != nil {
+				logs.CtxError(ctx, "[handleDetails]batch update status failed: %s", err)
+				return err
+			}
+		}
+	}
+	logs.CtxInfo(ctx, "[handleDetails]cEntries len: %d", len(cEntries))
+	if len(cEntries) != 0 {
+		err := dao.CreateDetailDatas(ctx, cEntries, txID)
+		if err != nil {
+			logs.CtxError(ctx, "[handleDetails]create detail failed: %s", err)
+			return err
+		}
+	}
+	logs.CtxInfo(ctx, "[handleDetails]success")
 	return nil
 }
 
@@ -438,32 +464,49 @@ func (h *handler) handleDec(ctx context.Context) error {
 				logs.CtxError(ctx, "[handleDec]get task item id failed")
 				return errors.New("get task item id failed")
 			}
+			wlmc, ok := task.Get(config.Config().WidgetTaskOther.WLMC)
+			if !ok {
+				logs.CtxError(ctx, "[handleDec]get task wlmc id failed")
+				return errors.New("get task item id failed")
+			}
 			logs.CtxInfo(ctx, "[handleDec]ready to update task item: %s", id)
-			//当前进度不为空时,如果版单BOM表的[企划季度-编码-名称-颜色]全删掉了,开发状态变更为【已取消】
-			//当前进度为空时,如果版单BOM表单[企划季度-编码-名称-颜色]全删掉了,则删除打色任务的该条数据
-			pace, ok := task.GetAny("_widget_1696865063325")
-			if !ok {
-				logs.CtxError(ctx, "[handleDec]get task item pace failed")
-				return errors.New("get task item pace failed")
+			// 当前进度不为空时,如果版单BOM表的[企划季度-编码-名称-颜色]全删掉了,开发状态变更为【已取消】
+			// 查询版单bom表
+			ok, err = dao.QueryDetail(ctx, &dao.EntryData{
+				Code:  dr.Code,
+				Color: dr.Color,
+				Year:  dr.Year,
+				WLMC:  wlmc,
+			})
+			if err != nil || ok {
+				logs.CtxInfo(ctx, "[]no need to update status, err: %s, ok: %v", err, ok)
+				continue
 			}
-			list, ok := pace.([]any)
-			if !ok {
-				logs.CtxError(ctx, "[handleDec]type assert list failed")
-				return errors.New("type assert list failed")
+			err = dao.UpdateTaskStatus(ctx, id, dao.TaskStatusCanceled)
+			if err != nil {
+				logs.CtxError(ctx, "[handleDec]failed to update task item: %s", err)
+				return err
 			}
-			if len(list) != 0 {
-				err = dao.UpdateTaskItem(ctx, id, dao.TaskStatusCanceled)
-				if err != nil {
-					logs.CtxError(ctx, "[handleDec]failed to update task item: %s", err)
-					return err
-				}
-			} else {
-				err = dao.DeleteTasks(ctx, []string{id})
-				if err != nil {
-					logs.CtxError(ctx, "[handleDec]failed to delete task item: %s", err)
-					return err
-				}
-			}
+
+			//当前进度为空时,如果版单BOM表单[企划季度-编码-名称-颜色]全删掉了,则删除打色任务的该条数据 -- 此逻辑被取消
+			//pace, ok := task.GetAny("_widget_1696865063325")
+			//if !ok {
+			//	logs.CtxError(ctx, "[handleDec]get task item pace failed")
+			//	return errors.New("get task item pace failed")
+			//}
+			//list, ok := pace.([]any)
+			//if !ok {
+			//	logs.CtxError(ctx, "[handleDec]type assert list failed")
+			//	return errors.New("type assert list failed")
+			//}
+			//if len(list) != 0 {
+			//} else {
+			//	err = dao.DeleteTasks(ctx, []string{id})
+			//	if err != nil {
+			//		logs.CtxError(ctx, "[handleDec]failed to delete task item: %s", err)
+			//		return err
+			//	}
+			//}
 		}
 	}
 	return nil

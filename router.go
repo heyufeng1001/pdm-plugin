@@ -13,5 +13,7 @@ func customizedRegister(r *server.Hertz) {
 
 	r.POST("/data", handler.HandleData)
 
+	r.GET("/sync", handler.HandleSync)
+
 	// your code ...
 }

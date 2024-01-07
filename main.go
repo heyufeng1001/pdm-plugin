@@ -3,18 +3,24 @@
 package main
 
 import (
-	"github.com/cloudwego/hertz/pkg/app/server"
+	"context"
+	"sync"
 
+	"github.com/cloudwego/hertz/pkg/app/server"
 	"pdm-plugin.github.com/biz/dao"
 	"pdm-plugin.github.com/config"
 	"pdm-plugin.github.com/logs"
+	"pdm-plugin.github.com/utils"
 )
 
 func main() {
 	logs.Init()
 
+	logs.CtxInfo(context.Background(), "123")
+
 	config.Init("./conf/conf.yaml")
 	dao.Init()
+	utils.GlobalLock = sync.Mutex{}
 
 	h := server.Default()
 

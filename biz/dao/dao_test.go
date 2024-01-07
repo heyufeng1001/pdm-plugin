@@ -8,8 +8,10 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"pdm-plugin.github.com/config"
+	"pdm-plugin.github.com/logs"
 )
 
 func TestQueryDesign(t *testing.T) {
@@ -65,9 +67,23 @@ func TestCreateTask(t *testing.T) {
 	}
 }
 
+func TestQueryDetail(t *testing.T) {
+	logs.Init()
+	config.Init("../../conf/conf.yaml")
+	ok, err := QueryDetail(context.Background(), &EntryData{
+		Code:  "MWV3241",
+		Color: "",
+		Year:  "moodytiger-2024年秋冬企划案",
+		WLMC:  "20D消光尼丝纺（底压光sasa",
+	})
+	t.Log(ok)
+	t.Log(err)
+	time.Sleep(time.Second)
+}
+
 func TestUpdateTask(t *testing.T) {
 	config.Init("../../conf/conf.yaml")
-	err := UpdateTaskItem(context.Background(), "6523e0e49609ca273f0a142b", TaskStatusCanceled)
+	err := UpdateTaskStatus(context.Background(), "6523e0e49609ca273f0a142b", TaskStatusCanceled)
 	if err != nil {
 		t.Log(err)
 		return
