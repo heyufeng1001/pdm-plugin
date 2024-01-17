@@ -195,16 +195,11 @@ func QueryTask(ctx context.Context, data *EntryData) (client.EntryItem, error) {
 		},
 		Filter: filter.NewFilter().WithRel(filter.RelationAnd).
 			WithCond(&filter.Cond{
-				Field:  config.Config().WidgetTask.ItemType,
+				Field:  config.Config().WidgetTask.ItemColor,
 				Type:   "string",
 				Method: filter.CondMethodEq,
-				Value:  []any{data.Type},
+				Value:  []any{data.Color},
 			}).WithCond(&filter.Cond{
-			Field:  config.Config().WidgetTask.ItemColor,
-			Type:   "string",
-			Method: filter.CondMethodEq,
-			Value:  []any{data.Color},
-		}).WithCond(&filter.Cond{
 			Field:  config.Config().WidgetTask.ItemCode,
 			Type:   "string",
 			Method: filter.CondMethodEq,
@@ -324,6 +319,9 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 	SafeSet(ctx, conf.SFYYS, bom, item, other.SFYYS)
 	SafeSet(ctx, conf.FZZDBDSJ, bom, item, other.FZZDBDSJ)
 	SafeSet(ctx, conf.GYSWLBM, bom, item, other.GYSWLBM)
+	SafeSet(ctx, conf.GYSMC, bom, item, other.GYSMC)
+	SafeSet(ctx, conf.DSGD, bom, item, other.DSGD)
+	SafeSet(ctx, conf.JCLX, bom, item, other.JCLX)
 
 	body.Data = item
 	err := client.NewIDataClient().Create(ctx, body)
@@ -332,7 +330,7 @@ func CreateTaskItem(ctx context.Context, data *EntryData, base, bom client.Entry
 }
 
 func MakeTaskItem(ctx context.Context, data *EntryData, base, bom client.EntryItem,
-	entryID string, isSync bool) client.EntryItem {
+	entryID string, isSync bool) (client.EntryItem, string) {
 	txID := fmt.Sprintf("%s-%d", ctx.Value(logs.CtxKeyLogID), time.Now().Unix())
 	item := client.EntryItem(make(map[string]any))
 	item[config.Config().WidgetTask.ItemType] = client.NewEntryValue(data.Type)
@@ -389,7 +387,7 @@ func MakeTaskItem(ctx context.Context, data *EntryData, base, bom client.EntryIt
 	}
 	if conf == nil {
 		logs.CtxInfo(ctx, "[MakeDetailEntry]no conf find: %s", entryID)
-		return nil
+		return nil, ""
 	}
 	// 处理other字段
 	common := config.Config().WidgetDesignCommon
@@ -418,12 +416,15 @@ func MakeTaskItem(ctx context.Context, data *EntryData, base, bom client.EntryIt
 	SafeSet(ctx, conf.HSDJ, bom, item, other.HSDJ)
 	SafeSet(ctx, conf.GYSZH, bom, item, other.GYSZH)
 	SafeSet(ctx, conf.SFYYS, bom, item, other.SFYYS)
+	SafeSet(ctx, conf.GYSMC, bom, item, other.GYSMC)
+	SafeSet(ctx, conf.DSGD, bom, item, other.DSGD)
+	SafeSet(ctx, conf.JCLX, bom, item, other.JCLX)
 	if !isSync {
 		SafeSet(ctx, conf.FZZDBDSJ, bom, item, other.FZZDBDSJ)
 	}
 	SafeSet(ctx, conf.GYSWLBM, bom, item, other.GYSWLBM)
 
-	return item
+	return item, txID
 }
 
 const (
@@ -504,12 +505,13 @@ func UpdateTaskStatus(ctx context.Context, id string, status TaskStatus) error {
 	return err
 }
 
-func UpdateTask(ctx context.Context, id string, item client.EntryItem) error {
+func UpdateTask(ctx context.Context, id string, item client.EntryItem, txID string) error {
 	logs.CtxInfo(ctx, "[UpdateTaskStatus]ready to update task: %s, %s", id, utils.MustMarshal(item))
 	body := &client.UpdateParam{
 		BaseEntry: client.BaseEntry{
-			AppID:   config.Config().AppID,
-			EntryID: config.Config().EntryTaskID,
+			AppID:         config.Config().AppID,
+			EntryID:       config.Config().EntryTaskID,
+			TransactionID: txID,
 		},
 		DataID: id,
 		Data:   item,
@@ -644,12 +646,13 @@ func UpdateDetailStatus(ctx context.Context, id string, status string) error {
 	return err
 }
 
-func UpdateDetail(ctx context.Context, id string, item client.EntryItem) error {
+func UpdateDetail(ctx context.Context, id string, item client.EntryItem, txID string) error {
 	logs.CtxInfo(ctx, "[UpdateDetailStatus]start, id: %s, status: %s", id, utils.MustMarshal(item))
 	body := &client.UpdateParam{
 		BaseEntry: client.BaseEntry{
-			AppID:   config.Config().AppID,
-			EntryID: config.Config().EntryDetailID,
+			AppID:         config.Config().AppID,
+			EntryID:       config.Config().EntryDetailID,
+			TransactionID: txID,
 		},
 		DataID: id,
 	}

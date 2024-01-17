@@ -38,8 +38,8 @@ func Init() {
 	// 提供压缩和删除
 	lumberjackLogger := &lumberjack.Logger{
 		Filename:   fileName,
-		MaxSize:    20,   // 一个文件最大可达 20M。
-		MaxBackups: 100,  // 最多同时保存 100 个文件。
+		MaxSize:    20,   // 一个文件最大可达 40M。
+		MaxBackups: 100,  // 最多同时保存 500 个文件。
 		MaxAge:     10,   // 一个文件最多可以保存 10 天。
 		Compress:   true, // 用 gzip 压缩。
 	}

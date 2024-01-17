@@ -336,8 +336,8 @@ func (h *handler) handleBase(ctx context.Context, drs []*dao.DesignRecord) error
 				return errors.New("get task item id failed")
 			}
 			logs.CtxInfo(ctx, "[handleBase]ready to update task item: %s", id)
-			nt := dao.MakeTaskItem(ctx, dr.ToEntryData(), h.Data, p.First, p.Second, false)
-			err = dao.UpdateTask(ctx, id, nt)
+			nt, txID := dao.MakeTaskItem(ctx, dr.ToEntryData(), h.Data, p.First, p.Second, false)
+			err = dao.UpdateTask(ctx, id, nt, txID)
 			if err != nil {
 				logs.CtxError(ctx, "[handleBase]failed to update task item: %s", err)
 				return err
@@ -391,7 +391,7 @@ func (h *handler) handleDetails(ctx context.Context) error {
 	logs.CtxInfo(ctx, "[handleDetails]ready to batch update status, len: %d", len(uEntires))
 	if len(uEntires) != 0 {
 		for _, entire := range uEntires {
-			err := dao.UpdateDetail(ctx, entire.First, entire.Second)
+			err := dao.UpdateDetail(ctx, entire.First, entire.Second, txID)
 			if err != nil {
 				logs.CtxError(ctx, "[handleDetails]batch update status failed: %s", err)
 				return err

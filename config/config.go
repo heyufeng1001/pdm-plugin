@@ -134,6 +134,10 @@ type WidgetDesignBOMConfig struct {
 	GYSJC    string `yaml:"GYSJC"`
 	TSYQ     string `yaml:"TSYQ"`
 	SFYYS    string `yaml:"SFYYS"`
+	GYSMC    string `yaml:"GYSMC"`
+	CGZRR    string `yaml:"CGZRR"`
+	JCLX     string `yaml:"JCLX"`
+	DSGD     string `yaml:"DSGD"`
 
 	RWZT string `yaml:"RWZT"`
 }
@@ -197,6 +201,10 @@ type WidgetDetailConfig struct {
 	SFCYWL   string `yaml:"SFCYWL"`
 	TSYQ     string `yaml:"TSYQ"`
 	SFYYS    string `yaml:"SFYYS"`
+	GYSMC    string `yaml:"GYSMC"`
+	CGZRR    string `yaml:"CGZRR"`
+	JCLX     string `yaml:"JCLX"`
+	DSGD     string `yaml:"DSGD"`
 }
 
 type WidgetTaskOtherConfig struct {
@@ -223,6 +231,9 @@ type WidgetTaskOtherConfig struct {
 	TSYQ     string `yaml:"TSYQ"`
 	SFYYS    string `yaml:"SFYYS"`
 	SJS      string `yaml:"SJS"`
+	GYSMC    string `yaml:"GYSMC"`
+	JCLX     string `yaml:"JCLX"`
+	DSGD     string `yaml:"DSGD"`
 }
 
 var conf *AppConfig

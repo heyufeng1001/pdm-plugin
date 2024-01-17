@@ -146,7 +146,7 @@ func syncSingleData(ctx context.Context, item client.EntryItem) {
 			continue
 		}
 		e := dao.MakeDetailEntry(ctx, item, bom.First, bom.Second, txID)
-		err = dao.UpdateDetail(ctx, bid, e)
+		err = dao.UpdateDetail(ctx, bid, e, txID)
 		if err != nil {
 			logs.CtxError(ctx, "[]update uuid %s failed: %s", uuid, err)
 			continue
@@ -170,11 +170,11 @@ func syncSingleData(ctx context.Context, item client.EntryItem) {
 		}
 		logs.CtxInfo(ctx, "[handleBase]task exist")
 		bom := boms[dr.BaseUUID]
-		nt := dao.MakeTaskItem(ctx, dr.ToEntryData(), item, bom.First, bom.Second, true)
+		nt, txID := dao.MakeTaskItem(ctx, dr.ToEntryData(), item, bom.First, bom.Second, true)
 		if nt == nil {
 			logs.CtxInfo(ctx, "[]make task failed: %s", dr.BaseUUID)
 		}
-		err = dao.UpdateTask(ctx, tid, nt)
+		err = dao.UpdateTask(ctx, tid, nt, txID)
 		if err != nil {
 			logs.CtxInfo(ctx, "[]update task failed: %s", err)
 			continue

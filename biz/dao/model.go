@@ -103,6 +103,10 @@ func MakeDetailEntry(ctx context.Context, base, bom client.EntryItem, entryID, t
 	SafeSet(ctx, conf.FZZDBDSJ, bom, ret, detail.FZZDBDSJ)
 	SafeSet(ctx, conf.GYSWLBM, bom, ret, detail.GYSWLBM)
 	SafeSet(ctx, conf.SZ, bom, ret, detail.SZ)
+	SafeSet(ctx, conf.GYSMC, bom, ret, detail.GYSMC)
+	SafeSet(ctx, conf.CGZRR, bom, ret, detail.CGZRR)
+	SafeSet(ctx, conf.JCLX, bom, ret, detail.JCLX)
+	SafeSet(ctx, conf.DSGD, bom, ret, detail.DSGD)
 	SafeSetFile(ctx, conf.TP, bom, ret, detail.TP, txID, config.Config().EntryDetailID)
 
 	SafeSet(ctx, common.BD, base, ret, detail.BD)
@@ -145,7 +149,7 @@ func SafeSet(ctx context.Context, key string, from, to client.EntryItem, keyTo s
 		return
 	}
 	if keyTo == config.Config().WidgetTaskOther.FZR || keyTo == config.Config().WidgetDetail.SJS || keyTo == config.Config().WidgetTaskOther.SJS ||
-		keyTo == config.Config().WidgetTaskOther.GYSZH || keyTo == config.Config().WidgetDetail.GYSZH {
+		keyTo == config.Config().WidgetTaskOther.GYSZH || keyTo == config.Config().WidgetDetail.GYSZH || keyTo == config.Config().WidgetDetail.CGZRR {
 		logs.CtxInfo(ctx, "[SafeSet]into key fzr, kk is: %s", utils.MustMarshal(kk))
 		people, ok := kk.(map[string]any)
 		if !ok {
