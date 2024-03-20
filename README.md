@@ -1,4 +1,19 @@
-## 配置详情
+## 部署方式
+
+```shell
+sh ./build.sh
+# 会打出一个名为 pdm-plugin 的 tar 包，这就是编译产物
+# 将产物打包上传至服务器的目录/opt/pdm-plugin下解压
+cd /opt/pdm-plugin
+# 当前服务器/opt/pdm-plugin目录下有快捷启动脚本，除开启动服务，还附带日志清理、服务停止等逻辑，自行看脚本
+sh ./bootstrap.sh
+# 如果不用这个脚本，用编译产物自带的脚本也行
+sh ./output/bootstrap.sh
+```
+
+最终目录结构：
+![img.png](img.png)
+
 ## 原始需求
 
 使用ChatGPT开发简道云的插件需求
